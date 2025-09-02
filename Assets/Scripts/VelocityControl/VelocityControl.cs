@@ -6,21 +6,21 @@ public class VelocityControl : MonoBehaviour {
 
     public StateFinder state;
 
-    public GameObject propFL;
-    public GameObject propFR;
-    public GameObject propRR;
-    public GameObject propRL;
+    [SerializeField] GameObject propFL;
+    [SerializeField] GameObject propFR;
+    [SerializeField] GameObject propRR;
+    [SerializeField] GameObject propRL;
 
-    private float gravity = 9.81f;
-    private float time_constant_z_velocity = 1.0f; // Normal-person coordinates
-    private float time_constant_acceleration = 0.5f;
-    private float time_constant_omega_xy_rate = 0.1f; // Normal-person coordinates (roll/pitch)
-    private float time_constant_alpha_xy_rate = 0.05f; // Normal-person coordinates (roll/pitch)
-    private float time_constant_alpha_z_rate = 0.05f; // Normal-person coordinates (yaw)
+    readonly float gravity = 9.81f;
+    readonly float time_constant_z_velocity = 1.0f; // Normal-person coordinates
+    readonly float time_constant_acceleration = 0.5f;
+    readonly float time_constant_omega_xy_rate = 0.1f; // Normal-person coordinates (roll/pitch)
+    readonly float time_constant_alpha_xy_rate = 0.05f; // Normal-person coordinates (roll/pitch)
+    readonly float time_constant_alpha_z_rate = 0.05f; // Normal-person coordinates (yaw)
 
-    private float max_pitch = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies 
-    private float max_roll = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies
-    private float max_alpha = 10.0f;
+    readonly float max_pitch = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies 
+    readonly float max_roll = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies
+    readonly float max_alpha = 10.0f;
     //must set this
     public float desired_height = 4.0f;
     public float desired_vx = 0.0f;
@@ -32,7 +32,7 @@ public class VelocityControl : MonoBehaviour {
     private bool wait = false;
     private bool flag = true;
 
-    private float speedScale = 500.0f;
+    readonly float speedScale = 15000.0f;
 
     // Use this for initialization
     void Start () {
@@ -79,7 +79,7 @@ public class VelocityControl : MonoBehaviour {
 
         Vector3 desiredAlpha = Vector3.Scale(omegaError, new Vector3(-1.0f/time_constant_alpha_xy_rate, -1.0f/time_constant_alpha_z_rate, -1.0f/time_constant_alpha_xy_rate));
         desiredAlpha = Vector3.Min (desiredAlpha, Vector3.one * max_alpha);
-        desiredAlpha = Vector3.Max (desiredAlpha, Vector3.one * max_alpha * -1.0f);
+        desiredAlpha = Vector3.Max (desiredAlpha, -1.0f * max_alpha * Vector3.one);
 
         float desiredThrust = (gravity + desiredAcceleration.y) / (Mathf.Cos (state.Angles.z) * Mathf.Cos (state.Angles.x));
         desiredThrust = Mathf.Min (desiredThrust, 2.0f * gravity);
@@ -94,10 +94,10 @@ public class VelocityControl : MonoBehaviour {
         rb.AddRelativeForce (desiredForce , ForceMode.Acceleration);
 
         //prop transforms
-        propFL.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
-        propFR.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
-        propRR.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
-        propRL.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
+        propFL.transform.Rotate(desiredThrust * speedScale * Time.deltaTime * Vector3.forward);
+        propFR.transform.Rotate(desiredThrust * speedScale * Time.deltaTime * Vector3.forward);
+        propRR.transform.Rotate(desiredThrust * speedScale * Time.deltaTime * Vector3.forward);
+        propRL.transform.Rotate(desiredThrust * speedScale * Time.deltaTime * Vector3.forward);
 
         //Debug.Log ("Velocity" + state.VelocityVector);
         //Debug.Log ("Desired Velocity" + desiredVelocity);
